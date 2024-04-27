@@ -83,7 +83,7 @@ public class GameDesk {
         boolean isValid = false;
         int x = 0;
         int y = 0;
-        Stone activeKamen;
+        Stone activeStone;
         System.out.println("choose kamen which you want to move(x,y)");
         while (!isValid) {
             try {
