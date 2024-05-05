@@ -4,8 +4,7 @@ import java.util.Scanner;
 public class GameDesk {
     public Stone[][] grid = new Stone[8][8];
     private boolean active = true;
-    private ArrayList<Point> validmoves = new ArrayList<>();
-    private ArrayList<Jump> jumps = new ArrayList<>();
+    private ArrayList<Move> validmoves = new ArrayList<>();
 
 
     public void Draw() {
@@ -13,7 +12,16 @@ public class GameDesk {
             for (int j = 0; j <= 7; j++) {
                 if (!((j + i) % 2 == 0)) {
                     if (!(grid[i][j] == null)) {
-                        System.out.print(grid[i][j].getDisplay());
+                        String s = null;
+                        for (Move p : validmoves) {
+                            if (p.getTo().getX() == i && p.getTo().getY() == j) {
+                                s = grid[i][j].getDisplay() + "X";
+                            }
+                        }
+                        if (s == null) {
+                            s = grid[i][j].getDisplay() + " ";
+                        }
+                        System.out.print(s);
                     } else {
                         System.out.print(" ");
                     }
@@ -74,89 +82,114 @@ public class GameDesk {
 
     public void Start() {
         while (winner() == null) {
+            validmoves.clear();
             Draw();
-        }
-    }
-
-    public void Move() {
-        Scanner sc = new Scanner(System.in);
-        boolean isValid = false;
-        int x = 0;
-        int y = 0;
-        Stone activeStone;
-        System.out.println("choose kamen which you want to move(x,y)");
-        while (!isValid) {
             try {
-                String s = sc.nextLine();
-                x = Integer.parseInt(s.split(",")[0]);
-                y = Integer.parseInt(s.split(",")[1]);
-                isValid = true;
-                activeKamen = grid[x][y];
-
-                if (activeKamen.isColor() != active || grid[x][y] == null) {
-                    System.out.println("bad color ");
-                }
+                Move();
             } catch (Exception e) {
-                System.out.println("invalid format -> (number,numbr)");
-            }
-        }
-        activeKamen = grid[x][y];
-        if (activeKamen.isColor() == active) {
-            System.out.println("bad color ");
-        }
-        if (grid[x][y].isColor()) {
-            if (x - 1 >= 0 && y - 1 < 8) {
-                if (!grid[x - 1][y - 1].isFull()) {
-                    validmoves.add(new Point(x - 1, y - 1));
-                }
-            }
-            if (x - 2 >= 0 && y - 2 >= 0) {
-                if (!grid[x - 1][y - 1].isColor() && !grid[x - 2][y - 2].isFull()) {
-                    validmoves.add(new Point(x - 2, y - 2));
-                    jumps.add(new Jump(new Point(x - 2, y - 2), new Point(x - 1, y - 1)));
-                }
-            }
-            if (x + 2 < 8 && y - 2 >= 0) {
-                if (!grid[x + 1][y - 1].isColor() && !grid[x + 2][y - 2].isFull()) {
-                    validmoves.add(new Point(x + 2, y - 2));
-                    jumps.add(new Jump(new Point(x + 2, y - 2), new Point(x + 1, y - 1)));
-                }
-            }
-            if (y - 1 >= 0 && x + 1 < 8) {
-                if (!grid[x + 2][y - 2].isFull()) {
-                    validmoves.add(new Point(x + 1, y - 1));
-                }
-            }
-            if (grid[x][y].isKing()) {
-
-            }
-        } else {
-            if (x - 1 >= 0 && y + 1 < 8) {
-                if (!grid[x - 1][y + 1].isFull()) {
-                    validmoves.add(new Point(x - 1, y + 1));
-                }
-            }
-            if (y + 1 <= 8 && x + 1 < 8) {
-                if (!grid[x + 1][y + 1].isFull()) {
-                    validmoves.add(new Point(x + 1, y + 1));
-                }
-            }
-            if (x - 2 >= 0 && y + 2 < 8) {
-                if (!grid[x - 1][y + 1].isColor() && !grid[x - 2][y + 2].isFull()) {
-                    validmoves.add(new Point(x - 2, y + 2));
-                    jumps.add(new Jump(new Point(x - 2, y + 2), new Point(x - 1, y + 1)));
-                }
-            }
-            if (x + 2 <= 8 && y + 2 < 8) {
-                if (!grid[x + 1][y + 1].isColor() && !grid[x + 2][y + 2].isFull()) {
-                    validmoves.add(new Point(x + 2, y + 2));
-                    jumps.add(new Jump(new Point(x + 2, y + 2), new Point(x + 1, y + 1)));
-                }
-            }
-            if (grid[x][y].isKing()) {
-
+                System.out.println(e.getMessage());
             }
         }
     }
+    public void Move() throws Exception{
+        int x;
+        int y;
+        int tox;
+        int toy;
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("napiste vstup ve formatu x,y (cislo,cislo)");
+        String input = scanner.next();
+        if(!(input.matches("[0-7],[0-7]"))) {
+            throw new Exception("chyba ryba skill issue spatný vstup");
+        }
+        char[] c = input.toCharArray();
+        x = Character.getNumericValue(c[0]);
+        y = Character.getNumericValue(c[2]);
+        if( grid[x][y] == null){
+            throw new Exception("na vybranem mistě není kmamen ");
+        }
+        if(!( grid[x][y].isFull())){
+            throw new Exception("na vybranem mistě není kmamen ");
+        }
 
+        if(!(grid[x][y].isColor() == active)){
+            throw new Exception("blba barva");
+        }
+        validmoves = generatePossibleMoves(x,y);
+        if(validmoves.size() == 0){
+            throw new Exception("tímto kamenem se nemuzes nikam pohnout");
+        }
+        for (Move m:validmoves) {
+            System.out.println(m.toString());
+        }
+        Draw();
+        System.out.println("vyber tah");
+        input = scanner.next();
+        if(!(input.matches("[0-7],[0-7]"))) {
+            throw new Exception("chyba ryba skill issue spatný vstup");
+        }
+        c = input.toCharArray();
+        tox = Character.getNumericValue(c[0]);
+        toy = Character.getNumericValue(c[2]);
+        for (Move m : validmoves){
+            if(m.getTo().getX() == tox && m.getTo().getY() == toy){
+                grid[tox][toy] = grid[x][y];
+                grid[x][y] = Stone.Empty();
+                if(!(m.getJump() == null)){
+                    if(m.getJump().getX() == tox && m.getJump().getY() == toy){
+                        grid[m.getJump().getX()][m.getJump().getY()] = Stone.Empty();
+                    }
+                }
+                active = !active;
+                break;
+            }
+            throw new Exception("to neni tah");
+        }
+    }
+
+    public boolean isValidMove(int fromRow, int fromCol, int toRow, int toCol, boolean player) {
+        if (toRow < 0 || toRow >= 8 || toCol < 0 || toCol >= 8)
+            return false;
+        if (grid[toRow][toCol].isFull())
+            return false;
+        if (Math.abs(toRow - fromRow) == 2 && Math.abs(toCol - fromCol) == 2) {
+            int jumpRow = (toRow + fromRow) / 2;
+            int jumpCol = (toCol + fromCol) / 2;
+            boolean opponent = !player;
+            if (grid[jumpRow][jumpCol].isFull()) {
+                if (grid[jumpRow][jumpCol].isColor() == opponent) {
+                    return true;
+                }
+            }
+        }
+
+
+        if (Math.abs(toRow - fromRow) == 1 && Math.abs(toCol - fromCol) == 1) {
+            return true;
+        }
+
+        return false;
+    }
+    public ArrayList<Move> generatePossibleMoves(int row, int col) {
+        ArrayList<Move> possibleMoves = new ArrayList<>();
+        Stone player = grid[row][col];
+        Point[] directions = {new Point(-1, -1),new Point(-1, 1),new Point(1, -1), new Point(1, 1)};
+        for (Point dir : directions) {
+            int newRow = row + dir.getX();
+            int newCol = col + dir.getY();
+            if (isValidMove(row, col, newRow, newCol, player.isColor())) {
+                possibleMoves.add(new Move( new Point(newRow , newCol)));
+            }
+        }
+        for (Point dir : directions) {
+            int jumpRow = row + 2 * dir.getX();
+            int jumpCol = col + 2 * dir.getY();
+            if (isValidMove(row, col, jumpRow, jumpCol, player.isColor())) {
+                int removeRow = (row + jumpRow) / 2;
+                int removeCol = (col + jumpCol) / 2;
+                possibleMoves.add(new Move(new Point(jumpRow , jumpCol),new Point(removeRow,removeCol)));
+            }
+        }
+        return possibleMoves;
+    }
 }

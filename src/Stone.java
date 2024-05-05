@@ -42,13 +42,13 @@ public class Stone {
         this.isFull = true;
     }
     public static Stone White(){
-        return new Stone("W ",false,true);
+        return new Stone("W",false,true);
     }
     public static Stone Black(){
-        return new Stone("B ",false,false);
+        return new Stone("B",false,false);
     }
     public static Stone Empty(){
-        Stone k = new Stone("  ",false,false);
+        Stone k = new Stone(" ",false,false);
         k.setFull(false);
         return k;
     }
