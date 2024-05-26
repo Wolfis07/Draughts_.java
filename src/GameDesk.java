@@ -1,3 +1,7 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -5,8 +9,12 @@ public class GameDesk {
     public Stone[][] grid = new Stone[8][8];
     private boolean active = true;
     private ArrayList<Move> validmoves = new ArrayList<>();
-
-
+    JFrame frame = new JFrame();
+    JTextField textField = new JTextField();
+    JPanel panel = new JPanel();
+    JButton button = new JButton();
+    JPanel[] elemnts = new JPanel[64];
+    String command = null;
     public void Draw() {
         for (int i = 0; i <= 7; i++) {
             for (int j = 0; j <= 7; j++) {
@@ -34,6 +42,48 @@ public class GameDesk {
     }
 
     public GameDesk() {
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800,800);
+        frame.getContentPane().setBackground(new Color(50,50,50));
+        frame.setLayout(null);
+        frame.setVisible(true);
+        frame.setLayout(new BorderLayout());
+        frame.setBounds(0,0,900,900);
+
+        panel.setBackground(new Color(0,75,0));
+        panel.setLayout(new GridLayout(8,8));
+
+        textField.setBackground(new Color(255,255,255));
+        textField.setSize(900,100);
+
+        for (int i = 0; i <= 7; i++) {
+            for (int j = 0; j <= 7; j++) {
+                elemnts[i * 8 + j] = new JPanel();
+                elemnts[i * 8 + j].setBackground(Color.LIGHT_GRAY);
+                elemnts[i * 8 + j].setSize(80, 80);
+                if (!((j + i) % 2 == 0)) {
+                    elemnts[i * 8 + j].setBackground(Color.WHITE);
+                }
+                panel.add(elemnts[i * 8 + j]);
+            }
+        }
+
+        button.setText("Submit");
+        button.setSize(100,900);
+        button.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                command = textField.getText();
+                System.out.println(command);
+            }
+        });
+
+        frame.add(textField,BorderLayout.SOUTH);
+        frame.add(button,BorderLayout.EAST);
+        frame.add(panel);
+
         for (int i = 0; i <= 2; i++) {
             for (int j = 0; j <= 7; j++) {
                 if (!((j + i) % 2 == 0)) {
@@ -55,6 +105,7 @@ public class GameDesk {
                 }
             }
         }
+        Start();
     }
 
     public String winner() {
@@ -116,7 +167,7 @@ public class GameDesk {
             throw new Exception("blba barva");
         }
         validmoves = generatePossibleMoves(x,y);
-        if(validmoves.size() == 0){
+        if(validmoves.isEmpty()){
             throw new Exception("tímto kamenem se nemuzes nikam pohnout");
         }
         for (Move m:validmoves) {
@@ -131,6 +182,7 @@ public class GameDesk {
         c = input.toCharArray();
         tox = Character.getNumericValue(c[0]);
         toy = Character.getNumericValue(c[2]);
+        boolean moved = false;
         for (Move m : validmoves){
             if(m.getTo().getX() == tox && m.getTo().getY() == toy){
                 grid[tox][toy] = grid[x][y];
@@ -140,9 +192,12 @@ public class GameDesk {
                         grid[m.getJump().getX()][m.getJump().getY()] = Stone.Empty();
                     }
                 }
+                moved = true;
                 active = !active;
                 break;
             }
+        }
+        if(!moved){
             throw new Exception("to neni tah");
         }
     }
@@ -162,12 +217,9 @@ public class GameDesk {
                 }
             }
         }
-
-
         if (Math.abs(toRow - fromRow) == 1 && Math.abs(toCol - fromCol) == 1) {
             return true;
         }
-
         return false;
     }
     public ArrayList<Move> generatePossibleMoves(int row, int col) {
@@ -192,4 +244,5 @@ public class GameDesk {
         }
         return possibleMoves;
     }
+
 }

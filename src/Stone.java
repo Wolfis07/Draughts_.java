@@ -5,6 +5,8 @@ public class Stone {
     private boolean isFull;
 
 
+
+
     public boolean isColor() {
         return color;
     }
