@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -10,35 +12,57 @@ public class GameDesk {
     private boolean active = true;
     private ArrayList<Move> validmoves = new ArrayList<>();
     JFrame frame = new JFrame();
+
+    final int TILE_SIZE = 100;
+
+    Font font = new Font("Mv Boli",Font.BOLD,50);
     JTextField textField = new JTextField();
-    JPanel panel = new JPanel();
-    JButton button = new JButton();
-    JPanel[] elemnts = new JPanel[64];
-    String command = null;
-    public void Draw() {
-        for (int i = 0; i <= 7; i++) {
-            for (int j = 0; j <= 7; j++) {
-                if (!((j + i) % 2 == 0)) {
-                    if (!(grid[i][j] == null)) {
-                        String s = null;
-                        for (Move p : validmoves) {
-                            if (p.getTo().getX() == i && p.getTo().getY() == j) {
-                                s = grid[i][j].getDisplay() + "X";
+    JPanel panel = new JPanel() {
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g;
+
+            for (int i = 0; i <= 7; i++) {
+                for (int j = 0; j <= 7; j++) {
+                    int x = j * TILE_SIZE;
+                    int y = i * TILE_SIZE;
+                    if (!((j + i) % 2 == 0)) {
+                        if (!(grid[i][j] == null)) {
+                            g2.setColor(Color.WHITE);
+                            g2.setFont(font );
+                            g2.fillRect(x,y,TILE_SIZE,TILE_SIZE);
+
+
+                            String s = grid[i][j].getDisplay();
+                            for (Move p : validmoves) {
+                                if (p.getTo().getX() == i && p.getTo().getY() == j) {
+                                    s = grid[i][j].getDisplay() + "X";
+                                }
                             }
+                            if (s == null) {
+                                s = grid[i][j].getDisplay() + " ";
+                            }
+                            g2.setColor(Color.BLACK);
+
+                            FontMetrics m = g2.getFontMetrics(g2.getFont());
+                            g2.drawString(s,x,y + m.getDescent() + m.getAscent());
+
+                            System.out.print(s);
+                        } else {
                         }
-                        if (s == null) {
-                            s = grid[i][j].getDisplay() + " ";
-                        }
-                        System.out.print(s);
                     } else {
-                        System.out.print(" ");
+                        g2.setColor(Color.BLACK);
+                        g2.fillRect(x,y,TILE_SIZE,TILE_SIZE);
                     }
-                } else {
-                    System.out.print("▉▉");
                 }
+                System.out.println("");
             }
-            System.out.println("");
         }
+    };
+    public void Draw() {
+        panel.revalidate();
+        panel.repaint();
     }
 
     public GameDesk() {
@@ -46,6 +70,7 @@ public class GameDesk {
         frame.setSize(800,800);
         frame.getContentPane().setBackground(new Color(50,50,50));
         frame.setLayout(null);
+        frame.setResizable(false);
         frame.setVisible(true);
         frame.setLayout(new BorderLayout());
         frame.setBounds(0,0,900,900);
@@ -56,32 +81,24 @@ public class GameDesk {
         textField.setBackground(new Color(255,255,255));
         textField.setSize(900,100);
 
-        for (int i = 0; i <= 7; i++) {
-            for (int j = 0; j <= 7; j++) {
-                elemnts[i * 8 + j] = new JPanel();
-                elemnts[i * 8 + j].setBackground(Color.LIGHT_GRAY);
-                elemnts[i * 8 + j].setSize(80, 80);
-                if (!((j + i) % 2 == 0)) {
-                    elemnts[i * 8 + j].setBackground(Color.WHITE);
-                }
-                panel.add(elemnts[i * 8 + j]);
-            }
-        }
-
-        button.setText("Submit");
-        button.setSize(100,900);
-        button.addActionListener(new ActionListener()
-        {
+        textField.addKeyListener(new KeyListener() {
             @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                command = textField.getText();
-                System.out.println(command);
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if(e.getKeyCode() == 10) canmove = true;
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
             }
         });
 
         frame.add(textField,BorderLayout.SOUTH);
-        frame.add(button,BorderLayout.EAST);
         frame.add(panel);
 
         for (int i = 0; i <= 2; i++) {
@@ -138,46 +155,57 @@ public class GameDesk {
             try {
                 Move();
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                textField.setText(e.getMessage());
             }
         }
+        textField.setText(winner());
     }
+
+    public boolean canmove = false;
+
     public void Move() throws Exception{
+        canmove = false ;
         int x;
         int y;
         int tox;
         int toy;
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("napiste vstup ve formatu x,y (cislo,cislo)");
-        String input = scanner.next();
+        textField.setText("write input in the format y,x (number,number)");
+        String input;
+        while(!canmove){
+            Thread.sleep(5);
+        }
+        input = textField.getText();
+        canmove = false;
         if(!(input.matches("[0-7],[0-7]"))) {
-            throw new Exception("chyba ryba skill issue spatný vstup");
+            throw new Exception("wronk input");
         }
         char[] c = input.toCharArray();
         x = Character.getNumericValue(c[0]);
         y = Character.getNumericValue(c[2]);
         if( grid[x][y] == null){
-            throw new Exception("na vybranem mistě není kmamen ");
+            throw new Exception("there is no stone in the selected place ");
         }
         if(!( grid[x][y].isFull())){
-            throw new Exception("na vybranem mistě není kmamen ");
+            throw new Exception("there is no stone in the selected place ");
         }
-
         if(!(grid[x][y].isColor() == active)){
-            throw new Exception("blba barva");
+            throw new Exception("wrong color");
         }
         validmoves = generatePossibleMoves(x,y);
         if(validmoves.isEmpty()){
-            throw new Exception("tímto kamenem se nemuzes nikam pohnout");
+            throw new Exception("you cant move with this stone");
         }
         for (Move m:validmoves) {
             System.out.println(m.toString());
         }
         Draw();
-        System.out.println("vyber tah");
-        input = scanner.next();
+        while(!canmove){
+
+        }
+        input = textField.getText();
+        canmove = false;
         if(!(input.matches("[0-7],[0-7]"))) {
-            throw new Exception("chyba ryba skill issue spatný vstup");
+            throw new Exception("wrong input");
         }
         c = input.toCharArray();
         tox = Character.getNumericValue(c[0]);
@@ -198,7 +226,7 @@ public class GameDesk {
             }
         }
         if(!moved){
-            throw new Exception("to neni tah");
+            throw new Exception("you cant go there");
         }
     }
 
